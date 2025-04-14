@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#ffffff">
+
+
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:id="@+id/textCoordenadas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Lat: 0.0, Lon: 0.0"
+        android:textSize="16sp"
+        android:textColor="#000000"
+        android:padding="8dp"
+        android:background="#EEEEEE" />
+
+    <EditText
+        android:id="@+id/inputDireccion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Escribe una dirección"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:layout_marginTop="8dp"
+        android:background="#EEEEEE"
+        android:textColor="#000000"
+        android:padding="8dp"/>
+
+    <Button
+        android:id="@+id/btnVerJson"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ver registros"
+        android:layout_marginTop="8dp"
+        android:textColor="#000000" />
+
+
+</LinearLayout>

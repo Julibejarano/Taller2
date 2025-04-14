@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <!-- Botón 1: Contactos -->
+    <ImageButton
+        android:id="@+id/btnContactos"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_marginBottom="16dp"
+        android:background="@null"
+        android:contentDescription="Botón Contactos"
+        android:src="@drawable/contactos"
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btnImagenes"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Botón 2: Imágenes -->
+    <ImageButton
+        android:id="@+id/btnImagenes"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_marginBottom="16dp"
+        android:background="@null"
+        android:contentDescription="Botón Imágenes"
+        android:src="@drawable/camera"
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toBottomOf="@id/btnContactos"
+        app:layout_constraintBottom_toTopOf="@+id/btnMapa"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Botón 3: Mapa -->
+    <ImageButton
+        android:id="@+id/btnMapa"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:background="@null"
+        android:contentDescription="Botón Mapa"
+        android:src="@drawable/osmap"
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toBottomOf="@id/btnImagenes"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
