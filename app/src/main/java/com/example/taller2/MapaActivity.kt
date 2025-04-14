@@ -55,24 +55,30 @@ class MapaActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Cargar la configuración de osmdroid
         Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
         setContentView(R.layout.activity_mapa)
 
+        // Inicialización de vistas y botones
         mapView = findViewById(R.id.mapView)
         textCoordenadas = findViewById(R.id.textCoordenadas)
         val btnVerJson = findViewById<Button>(R.id.btnVerJson)
         val inputDireccion = findViewById<EditText>(R.id.inputDireccion)
 
+        // Configuración del mapa
         mapView.setTileSource(TileSourceFactory.MAPNIK)
         mapView.setMultiTouchControls(true)
 
+        // Marcador que representa la ubicación actual del usuario
         marcadorActual = Marker(mapView).apply {
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         }
         mapView.overlays.add(marcadorActual)
 
+        // Inicializar el archivo JSON donde se almacenan las ubicaciones
         File(filesDir, "registro_ubicaciones.json").writeText("[]")
 
+        // Verificar si se tienen permisos de ubicacion
         if (tienePermisoUbicacion()) {
             mostrarUbicacion()
             iniciarActualizaciones()
@@ -80,14 +86,17 @@ class MapaActivity : AppCompatActivity() {
             solicitarPermisoUbicacion()
         }
 
+        // Registrar el sensor de luz
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         sensorLuz = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
         sensorLuz?.let {
             sensorManager.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
 
+        // Accion del boton para ver el contenido del JSON
         btnVerJson.setOnClickListener { mostrarContenidoJson() }
 
+        // Accion del campo de texto para buscar una direccion
         inputDireccion.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
                 val direccion = inputDireccion.text.toString()
@@ -98,6 +107,7 @@ class MapaActivity : AppCompatActivity() {
             } else false
         }
 
+        // Configura el evento de long press en el mapa
         configurarLongClickEnMapa()
     }
 
@@ -107,6 +117,7 @@ class MapaActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_PERMISO_UBICACION)
     }
 
+    // Responde a la solicitud de permisos
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_PERMISO_UBICACION && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
@@ -115,13 +126,16 @@ class MapaActivity : AppCompatActivity() {
         }
     }
 
+    // Muestra la ubicación actual en el mapa
     private fun mostrarUbicacion() {
+        // Se crea un overlay para mostrar la ubicación en el mapa
         val overlay = MyLocationNewOverlay(mapView).apply {
             enableMyLocation()
             enableFollowLocation()
         }
         mapView.overlays.add(overlay)
 
+        // Espera el primer fix (coordenadas disponibles)
         overlay.runOnFirstFix {
             val punto = overlay.myLocation
             runOnUiThread {
@@ -131,6 +145,7 @@ class MapaActivity : AppCompatActivity() {
                         longitude = it.longitude
                     }
 
+                    // Ajusta el zoom y centra el mapa en la ubicacion
                     mapView.controller.setZoom(17.0)
                     mapView.controller.setCenter(it)
 
@@ -142,6 +157,7 @@ class MapaActivity : AppCompatActivity() {
         }
     }
 
+    // Inicia actualizaciones periódicas de ubicacion
     private fun iniciarActualizaciones() {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         if (tienePermisoUbicacion()) {
@@ -162,10 +178,12 @@ class MapaActivity : AppCompatActivity() {
                 // for ActivityCompat#requestPermissions for more details.
                 return
             }
+            // Actualizaciones de ubicacion cada 5 segundos y 5 metros
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 5f, locationListener)
         }
     }
 
+    // Listener para recibir las actualizaciones de ubicacion
     private val locationListener = LocationListener { location ->
         val anterior = ultimaUbicacion
         if (anterior == null || location.distanceTo(anterior) > 30) {
@@ -182,6 +200,7 @@ class MapaActivity : AppCompatActivity() {
         }
     }
 
+    // Buscar la direccion desde un texto proporcionado
     private fun buscarDireccion(texto: String) {
         try {
             val resultados = Geocoder(this).getFromLocationName(texto, 1)
@@ -205,7 +224,7 @@ class MapaActivity : AppCompatActivity() {
                 mapView.overlays.add(marcadorBusqueda)
                 mapView.invalidate()
 
-                // Asegurar que el mapa ya está listo
+                // Asegurar que el mapa ya esa cargado
                 mapView.postDelayed({
                     mapView.controller.setZoom(18.0)
                     mapView.controller.setCenter(punto)
@@ -220,6 +239,7 @@ class MapaActivity : AppCompatActivity() {
         }
     }
 
+    // Configura el long press en el mapa para buscar una direccion desde las coordenadas
     private fun configurarLongClickEnMapa() {
         val receiver = object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?) = false
@@ -231,6 +251,7 @@ class MapaActivity : AppCompatActivity() {
         mapView.overlays.add(MapEventsOverlay(receiver))
     }
 
+    // Buscar la direccion desde coordenadas y agregarla al mapa
     private fun buscarDireccionDesdeCoordenadas(geoPoint: GeoPoint) {
         try {
             val resultados = Geocoder(this).getFromLocation(geoPoint.latitude, geoPoint.longitude, 1)
@@ -257,6 +278,7 @@ class MapaActivity : AppCompatActivity() {
         }
     }
 
+    // Muestra la ruta desde la ubicacion actual hasta una ubicacion específica usando la API de OpenRouteService
     private fun mostrarRutaDesdeUbicacion(destino: GeoPoint) {
         val origen = ultimaUbicacion
 
@@ -333,6 +355,7 @@ class MapaActivity : AppCompatActivity() {
         }.start()
     }
 
+    // Decodifica una cadena codificada en formato polilínea en una lista de puntos geograficos (GeoPoint).
     private fun decodePolyline(encoded: String): List<GeoPoint> {
         val poly = ArrayList<GeoPoint>()
         var index = 0
@@ -340,10 +363,12 @@ class MapaActivity : AppCompatActivity() {
         var lat = 0
         var lng = 0
 
+        // Recorre la cadena codificada mientras no se haya alcanzado su longitud
         while (index < len) {
             var b: Int
             var shift = 0
             var result = 0
+            // Decodificación de la latitud
             do {
                 b = encoded[index++].code - 63
                 result = result or (b and 0x1f shl shift)
@@ -352,6 +377,7 @@ class MapaActivity : AppCompatActivity() {
             val dlat = if ((result and 1) != 0) (result shr 1).inv() else result shr 1
             lat += dlat
 
+            //S repite el proceso para la longitud
             shift = 0
             result = 0
             do {
@@ -362,14 +388,16 @@ class MapaActivity : AppCompatActivity() {
             val dlng = if ((result and 1) != 0) (result shr 1).inv() else result shr 1
             lng += dlng
 
+            // Convierte las coordenadas decodificadas en grados decimales
             val latF = lat / 1E5
             val lngF = lng / 1E5
             poly.add(GeoPoint(latF, lngF))
         }
 
-        return poly
+        return poly // Retorna la lista de puntos geográficos decodificados
     }
 
+    // Calcula y muestra la distancia desde la ubicacion actual hasta un destino.
     private fun mostrarDistanciaDesdeUbicacion(destino: GeoPoint) {
         ultimaUbicacion?.let {
             val origen = Location("").apply {
@@ -385,6 +413,7 @@ class MapaActivity : AppCompatActivity() {
         }
     }
 
+    // Guarda la ubicacion actual en un archivo JSON en el almacenamiento interno
     private fun guardarUbicacionEnJson(location: Location) {
         val archivo = File(filesDir, "registro_ubicaciones.json")
         val nuevaEntrada = JSONObject().apply {
@@ -407,6 +436,7 @@ class MapaActivity : AppCompatActivity() {
         return formato.format(Date())
     }
 
+    // Lee el contenido del archivo JSON que contiene las ubicaciones guardadas
     private fun leerArchivoJson(): String {
         return try {
             val archivo = File(filesDir, "registro_ubicaciones.json")
@@ -416,6 +446,7 @@ class MapaActivity : AppCompatActivity() {
         }
     }
 
+    // Muestra el contenido del archivo JSON en un cuadro de dialogo
     private fun mostrarContenidoJson() {
         val contenido = leerArchivoJson()
         val dialog = android.app.AlertDialog.Builder(this)
@@ -426,15 +457,19 @@ class MapaActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    // SensorListener que monitorea el cambio en el sensor de luz para activar el modo oscuro o claro
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             event?.values?.get(0)?.let { lux ->
+                // Si la luz es baja, activa el modo oscuro en el mapa
                 if (lux < 10 && !modoOscuro) {
                     mapView.setTileSource(TileSourceFactory.HIKEBIKEMAP)
                     mapView.tileProvider.clearTileCache()
                     mapView.invalidate()
                     modoOscuro = true
-                    Toast.makeText(this@MapaActivity, "Modo oscuro activado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MapaActivity, "Modo oscuro activado", Toast.LENGTH_SHORT)
+                        .show()
+                // Si la luz es suficiente, activa el modo claro en el mapa
                 } else if (lux >= 10 && modoOscuro) {
                     mapView.setTileSource(TileSourceFactory.MAPNIK)
                     mapView.tileProvider.clearTileCache()
@@ -448,12 +483,14 @@ class MapaActivity : AppCompatActivity() {
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
     }
 
+    // Registra el listener cuando la actividad se reanuda
     override fun onResume() {
         super.onResume()
         mapView.onResume()
         sensorLuz?.let { sensorManager.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_NORMAL) }
     }
 
+    //Desregistra el listener cuando la actividad se pausa
     override fun onPause() {
         super.onPause()
         mapView.onPause()
